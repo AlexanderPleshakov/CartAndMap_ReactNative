@@ -32,6 +32,13 @@ const CartScreen = () => {
       );
    };
 
+   const moveToDeferred = async (item) => {
+      removeItem(item.id);
+      const storedDeferred = await AsyncStorage.getItem('deferred');
+      const deferred = storedDeferred ? JSON.parse(storedDeferred) : [];
+      await AsyncStorage.setItem('deferred', JSON.stringify([...deferred, item]));
+   };
+
    const removeItem = (id) => {
       setCart((prevCart) => prevCart.filter((item) => item.id !== id));
    };
@@ -40,7 +47,7 @@ const CartScreen = () => {
       cart.reduce((total, item) => total + item.price * item.quantity, 0) * (1 - discount);
 
    const applyPromoCode = () => {
-      if (promoCode === 'DISCOUNT10') setDiscount(0.1); // 10% скидка
+      if (promoCode === 'DISCOUNT10') setDiscount(0.1);
       else setDiscount(0);
    };
 
@@ -54,6 +61,8 @@ const CartScreen = () => {
                   item={item}
                   updateQuantity={updateQuantity}
                   removeItem={removeItem}
+                  deferItem={moveToDeferred}
+                  onDragEnd={() => moveToDeferred(item)}
                />
             )}
          />

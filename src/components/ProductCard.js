@@ -1,34 +1,70 @@
 import React from 'react';
 import { View, Text, Button, StyleSheet, TextInput } from 'react-native';
 import DeleteButton from './DeleteButton';
+import DeferButton from './DeferButton';
+import ProductItem from './ProductItem';
 
-const ProductCard = ({ item, updateQuantity, removeItem }) => {
+import { PanGestureHandler } from 'react-native-gesture-handler';
+import Animated, {
+   useSharedValue,
+   useAnimatedStyle,
+   withSpring,
+   runOnJS,
+} from 'react-native-reanimated';
+
+const ProductCard = ({ item, updateQuantity, removeItem, deferItem, onDragEnd }) => {
+   const translateY = useSharedValue(0);
+
+   const animatedStyle = useAnimatedStyle(() => ({
+      transform: [{ translateY: translateY.value }],
+   }));
+
+   const handleGestureEvent = ({ nativeEvent }) => {
+      translateY.value = nativeEvent.translationY;
+   };
+
+   const handleDragEnd = () => {
+      if (translateY.value > 150) {
+         runOnJS(onDragEnd)(); // Вызываем onDragEnd, если перетащено достаточно далеко
+      }
+      translateY.value = withSpring(0); // Возвращаем элемент в исходное положение
+   };
+
    return (
-      <View style={styles.card}>
-         <View style={styles.actionsBlock}>
-            <View>
-               <Text style={styles.title}>{item.name}</Text>
-               <Text>{item.description}</Text>
-            </View>
+      <PanGestureHandler
+         onGestureEvent={handleGestureEvent}
+         onEnded={handleDragEnd}
+      >
+         <Animated.View style={[animatedStyle]}>
+            <View style={styles.card}>
+               <View style={styles.actionsBlock}>
+                  <View>
+                     <Text style={styles.title}>{item.name}</Text>
+                     <Text>{item.description}</Text>
+                  </View>
 
-            <Text style={styles.price}>{item.price * item.quantity} ₽</Text>
+                  <Text style={styles.price}>{item.price * item.quantity} ₽</Text>
 
-            <View style={styles.quantityContainer}>
-               <Button title="-" onPress={() => updateQuantity(item.id, item.quantity - 1)} />
-               <TextInput
-                  style={styles.quantityInput}
-                  value={String(item.quantity)}
-                  keyboardType="number-pad"
-                  onChangeText={(value) => updateQuantity(item.id, parseInt(value, 10) || 1)}
-               />
-               <Button title="+" onPress={() => updateQuantity(item.id, item.quantity + 1)} />
+                  <View style={styles.quantityContainer}>
+                     <Button title="-" onPress={() => updateQuantity(item.id, item.quantity - 1)} />
+                     <TextInput
+                        style={styles.quantityInput}
+                        value={String(item.quantity)}
+                        keyboardType="number-pad"
+                        onChangeText={(value) => updateQuantity(item.id, parseInt(value, 10) || 1)}
+                     />
+                     <Button title="+" onPress={() => updateQuantity(item.id, item.quantity + 1)} />
 
-               <View style={styles.deleteBlock}>
-                  <DeleteButton onPress={() => removeItem(item.id)} />
+                     <View style={styles.deleteBlock}>
+                        <DeferButton onPress={() => deferItem(item.id)} />
+                        <DeleteButton onPress={() => removeItem(item.id)} />
+                     </View>
+                  </View>
                </View>
             </View>
-         </View>
-      </View>
+         </Animated.View>
+      </PanGestureHandler>
+
    );
 };
 
