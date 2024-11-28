@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Button, StyleSheet, TextInput } from 'react-native';
 import DeleteButton from './DeleteButton';
-import DeferButton from './DeferButton';
+import MoveToCartButton from './MoveToCartButton';
 
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import Animated, {
@@ -11,7 +11,7 @@ import Animated, {
    runOnJS,
 } from 'react-native-reanimated';
 
-const ProductCard = ({ item, updateQuantity, removeItem, deferItem, onDragEnd }) => {
+const DeferredCard = ({ item, undeferItem, moveToCart, onDragEnd }) => {
    const translateY = useSharedValue(0);
 
    const animatedStyle = useAnimatedStyle(() => ({
@@ -22,11 +22,11 @@ const ProductCard = ({ item, updateQuantity, removeItem, deferItem, onDragEnd })
       translateY.value = nativeEvent.translationY;
    };
 
-   const handleDragEnd = (e) => {
+   const handleDragEnd = () => {
       if (translateY.value > 150) {
-         runOnJS(onDragEnd)();
+         runOnJS(onDragEnd)(); // Вызываем onDragEnd, если перетащено достаточно далеко
       }
-      translateY.value = withSpring(0);
+      translateY.value = withSpring(0); // Возвращаем элемент в исходное положение
    };
 
    return (
@@ -45,18 +45,11 @@ const ProductCard = ({ item, updateQuantity, removeItem, deferItem, onDragEnd })
                   <Text style={styles.price}>{item.price * item.quantity} ₽</Text>
 
                   <View style={styles.quantityContainer}>
-                     <Button title="-" onPress={() => updateQuantity(item.id, item.quantity - 1)} />
-                     <TextInput
-                        style={styles.quantityInput}
-                        value={String(item.quantity)}
-                        keyboardType="number-pad"
-                        onChangeText={(value) => updateQuantity(item.id, parseInt(value, 10) || 1)}
-                     />
-                     <Button title="+" onPress={() => updateQuantity(item.id, item.quantity + 1)} />
+                     <Text style={styles.quantityInput}>{String(item.quantity)}</Text>
 
                      <View style={styles.deleteBlock}>
-                        <DeleteButton onPress={() => removeItem(item.id)} />
-                        <DeferButton onPress={() => deferItem(item.id)} />
+                        <DeleteButton onPress={() => undeferItem(item.id)} />
+                        <MoveToCartButton onPress={() => moveToCart(item.id)} />
                      </View>
                   </View>
                </View>
@@ -97,7 +90,7 @@ const styles = StyleSheet.create({
    quantityContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 2
+      gap: 10
    },
 
    quantityInput: {
@@ -118,4 +111,4 @@ const styles = StyleSheet.create({
    },
 });
 
-export default ProductCard;
+export default DeferredCard;

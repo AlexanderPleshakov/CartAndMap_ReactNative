@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TextInput, Button, StyleSheet } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ProductCard from '../components/ProductCard';
 
@@ -8,21 +9,38 @@ const CartScreen = () => {
    const [promoCode, setPromoCode] = useState('');
    const [discount, setDiscount] = useState(0);
 
+   const loadCart = async () => {
+      const storedCart = await AsyncStorage.getItem('cart');
+      if (storedCart) {
+         const parsedCart = JSON.parse(storedCart);
+         console.log('Loaded cart:', parsedCart);
+         const validatedCart = parsedCart.map((item, index) => ({
+            ...item,
+            id: item.id || index,
+         }));
+         setCart(validatedCart);
+      }
+   };
+
    useEffect(() => {
-      const loadCart = async () => {
-         const storedCart = await AsyncStorage.getItem('cart');
-         if (storedCart) setCart(JSON.parse(storedCart));
-      };
       loadCart();
    }, []);
+
+   useFocusEffect(
+      React.useCallback(() => {
+         loadCart();
+      }, [])
+   );
 
    useEffect(() => {
       AsyncStorage.setItem('cart', JSON.stringify(cart));
    }, [cart]);
 
    const addItemToCart = (item) => {
-      setCart((prevCart) => [...prevCart, item]);
+      const newItem = { ...item, id: item.id || Date.now() };
+      setCart((prevCart) => [...prevCart, newItem]);
    };
+
 
    const updateQuantity = (id, quantity) => {
       setCart((prevCart) =>
@@ -36,8 +54,10 @@ const CartScreen = () => {
       removeItem(item.id);
       const storedDeferred = await AsyncStorage.getItem('deferred');
       const deferred = storedDeferred ? JSON.parse(storedDeferred) : [];
-      await AsyncStorage.setItem('deferred', JSON.stringify([...deferred, item]));
+      const newDeferredItem = { ...item, id: item.id || Date.now() }; // Уникальный `id`
+      await AsyncStorage.setItem('deferred', JSON.stringify([...deferred, newDeferredItem]));
    };
+
 
    const removeItem = (id) => {
       setCart((prevCart) => prevCart.filter((item) => item.id !== id));
@@ -61,8 +81,8 @@ const CartScreen = () => {
                   item={item}
                   updateQuantity={updateQuantity}
                   removeItem={removeItem}
-                  deferItem={moveToDeferred}
-                  onDragEnd={() => moveToDeferred(item)}
+                  deferItem={() => moveToDeferred({ id: item.id, name: item.name, description: item.description, price: item.price, quantity: item.quantity })}
+                  onDragEnd={() => moveToDeferred({ id: item.id, name: item.name, description: item.description, price: item.price, quantity: item.quantity })}
                />
             )}
          />
@@ -74,10 +94,6 @@ const CartScreen = () => {
          />
          <Button title="Применить" onPress={applyPromoCode} />
          <Text style={styles.total}>Итоговая стоимость: {calculateTotal().toFixed(2)} ₽</Text>
-         <Button
-            title="Добавить новый товар"
-            onPress={() => addItemToCart({ id: Date.now(), name: 'Новый товар', description: 'Описание', price: 400, quantity: 1 })}
-         />
       </View>
    );
 };

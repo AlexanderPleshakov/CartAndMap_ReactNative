@@ -1,37 +1,56 @@
 import React, { useState, useEffect } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { View, Text, FlatList, TextInput, Button, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import ProductCard from '../components/ProductCard';
+import DeferredCard from '../components/DeferredCard';
 
 const DeferredScreen = () => {
    const [deferred, setDeferred] = useState([]);
 
+   const loadDeferred = async () => {
+      const storedDeferred = await AsyncStorage.getItem('deferred');
+      if (storedDeferred) {
+         const parsedDeferred = JSON.parse(storedDeferred);
+         console.log('Loaded deferred:', parsedDeferred); // Проверка данных
+         const validatedDeferred = parsedDeferred.map((item, index) => ({
+            ...item,
+            id: item.id || index, // Гарантия уникальных `id`
+         }));
+         setDeferred(validatedDeferred);
+      }
+   };
+
    useEffect(() => {
-      const loadDeferred = async () => {
-         const storedDeferred = await AsyncStorage.getItem('deferred');
-         if (storedDeferred) setDeferred(JSON.parse(storedDeferred));
-      };
       loadDeferred();
    }, []);
+
+   useFocusEffect(
+      React.useCallback(() => {
+         loadDeferred();
+      }, [])
+   );
 
    useEffect(() => {
       AsyncStorage.setItem('deferred', JSON.stringify(deferred));
    }, [deferred]);
 
-   const updateQuantity = (id, quantity) => {
-      setDeferred((prevCart) =>
-         prevCart.map((item) =>
-            item.id === id ? { ...item, quantity: Math.max(1, quantity) } : item
-         )
-      );
-   };
-
-   const moveToDeferred = async (item) => {
+   const undefer = async (item) => {
       removeItem(item.id);
    };
 
    const removeItem = (id) => {
       setDeferred((prevCart) => prevCart.filter((item) => item.id !== id));
+   };
+
+   const moveToCart = async (item) => {
+
+      removeItem(item.id);
+      console.log(deferred)
+
+      const storedCart = await AsyncStorage.getItem('cart');
+      const cart = storedCart ? JSON.parse(storedCart) : [];
+      const newCartItem = { ...item, id: item.id || Date.now() };
+      await AsyncStorage.setItem('cart', JSON.stringify([...cart, newCartItem]));
    };
 
    return (
@@ -40,12 +59,11 @@ const DeferredScreen = () => {
             data={deferred}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
-               <ProductCard
+               <DeferredCard
                   item={item}
-                  updateQuantity={updateQuantity}
-                  removeItem={removeItem}
-                  deferItem={moveToDeferred}
-                  onDragEnd={() => moveToDeferred(item)}
+                  undeferItem={removeItem}
+                  moveToCart={() => moveToCart(item)}
+                  onDragEnd={() => undefer(item)}
                />
             )}
          />
