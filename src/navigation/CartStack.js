@@ -14,7 +14,7 @@ const CartStack = () => {
             options={{ title: 'Корзина' }}
          />
          <Stack.Screen
-            name="OrederScreen"
+            name="OrderScreen"
             component={OrederScreen}
             options={{ title: 'Оформление заказа' }}
          />

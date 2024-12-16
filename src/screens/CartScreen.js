@@ -36,12 +36,6 @@ const CartScreen = ({ navigation }) => {
       AsyncStorage.setItem('cart', JSON.stringify(cart));
    }, [cart]);
 
-   const addItemToCart = (item) => {
-      const newItem = { ...item, id: item.id || Date.now() };
-      setCart((prevCart) => [...prevCart, newItem]);
-   };
-
-
    const updateQuantity = (id, quantity) => {
       setCart((prevCart) =>
          prevCart.map((item) =>
@@ -51,8 +45,10 @@ const CartScreen = ({ navigation }) => {
    };
 
    const handleCheckout = () => {
-      navigation.navigate('OrederScreen', { cart }); // Передаём данные корзины на экран заказа
+      const totalAmount = calculateTotal().toFixed(2);
+      navigation.navigate("OrderScreen", { cart, totalAmount });
    };
+
 
    const moveToDeferred = async (item) => {
       removeItem(item.id);
