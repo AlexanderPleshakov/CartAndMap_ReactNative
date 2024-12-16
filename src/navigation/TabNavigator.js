@@ -1,11 +1,12 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Image, Text } from 'react-native';
-import CartScreen from '../screens/CartScreen';
+import CartStack from './CartStack';
 import DeferredScreen from '../screens/DeferredScreen';
 import AddProductScreen from '../screens/AddProductScreen';
 
 const Tab = createBottomTabNavigator();
+
 
 const TabNavigator = () => {
    return (
@@ -47,7 +48,7 @@ const TabNavigator = () => {
             tabBarStyle: { height: 60 },
          })}
       >
-         <Tab.Screen name="Корзина" component={CartScreen} options={{ title: 'Корзина' }} />
+         <Tab.Screen name="Корзина" component={CartStack} options={{ headerShown: false }} />
          <Tab.Screen name="Отложенные" component={DeferredScreen} options={{ title: 'Отложенные' }} />
          <Tab.Screen name="Добавить" component={AddProductScreen} />
       </Tab.Navigator>

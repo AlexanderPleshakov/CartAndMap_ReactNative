@@ -4,7 +4,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ProductCard from '../components/ProductCard';
 
-const CartScreen = () => {
+const CartScreen = ({ navigation }) => {
    const [cart, setCart] = useState([]);
    const [promoCode, setPromoCode] = useState('');
    const [discount, setDiscount] = useState(0);
@@ -48,6 +48,10 @@ const CartScreen = () => {
             item.id === id ? { ...item, quantity: Math.max(1, quantity) } : item
          )
       );
+   };
+
+   const handleCheckout = () => {
+      navigation.navigate('OrederScreen', { cart }); // Передаём данные корзины на экран заказа
    };
 
    const moveToDeferred = async (item) => {
@@ -94,6 +98,7 @@ const CartScreen = () => {
          />
          <Button title="Применить" onPress={applyPromoCode} />
          <Text style={styles.total}>Итоговая стоимость: {calculateTotal().toFixed(2)} ₽</Text>
+         <Button title="Оформить заказ" onPress={handleCheckout} />
       </View>
    );
 };
@@ -101,7 +106,7 @@ const CartScreen = () => {
 const styles = StyleSheet.create({
    container: { flex: 1, padding: 16 },
    input: { borderWidth: 1, marginVertical: 10, padding: 8 },
-   total: { fontSize: 18, fontWeight: 'bold', marginTop: 10 },
+   total: { fontSize: 18, fontWeight: 'bold', marginTop: 10, marginBottom: 10 },
 });
 
 export default CartScreen;

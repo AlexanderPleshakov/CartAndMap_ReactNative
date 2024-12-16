@@ -12,21 +12,21 @@ import Animated, {
 } from 'react-native-reanimated';
 
 const ProductCard = ({ item, updateQuantity, removeItem, deferItem, onDragEnd }) => {
-   const translateY = useSharedValue(0);
+   const translateX = useSharedValue(0);
 
    const animatedStyle = useAnimatedStyle(() => ({
-      transform: [{ translateY: translateY.value }],
+      transform: [{ translateX: translateX.value }],
    }));
 
    const handleGestureEvent = ({ nativeEvent }) => {
-      translateY.value = nativeEvent.translationY;
+      translateX.value = nativeEvent.translationX;
    };
 
-   const handleDragEnd = (e) => {
-      if (translateY.value > 150) {
+   const handleDragEnd = () => {
+      if (translateX.value > 20) {
          runOnJS(onDragEnd)();
       }
-      translateY.value = withSpring(0);
+      translateX.value = withSpring(0);
    };
 
    return (
